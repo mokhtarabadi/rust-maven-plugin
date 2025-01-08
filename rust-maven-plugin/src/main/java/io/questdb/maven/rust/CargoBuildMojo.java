@@ -24,6 +24,7 @@
 
 package io.questdb.maven.rust;
 
+import io.questdb.jar.jni.Platform;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;

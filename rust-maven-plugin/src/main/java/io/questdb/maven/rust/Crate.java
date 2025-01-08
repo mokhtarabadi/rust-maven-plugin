@@ -67,6 +67,10 @@ public class Crate {
         this.targetDir = targetRootDir.resolve(getDirName());
         this.params = params;
 
+        if (params.target != null) {
+            Platform.refillFromRustTriple(params.target);
+        }
+
         final Path tomlPath = crateRoot.resolve("Cargo.toml");
         if (!Files.exists(tomlPath, LinkOption.NOFOLLOW_LINKS)) {
             throw new MojoExecutionException(
@@ -452,51 +456,6 @@ public class Crate {
         cargo(args);
     }
 
-    private String getNativeLibraryResourcePrefixFromRustTriple(String rustTriple) {
-        if (rustTriple == null || rustTriple.trim().isEmpty()) {
-            throw new IllegalArgumentException("Rust triple cannot be null or empty");
-        }
-
-        String[] parts = rustTriple.split("-");
-        if (parts.length < 3) {
-            throw new IllegalArgumentException("Invalid Rust triple format: " + rustTriple);
-        }
-
-        String arch = parts[0].replace("_", "-");
-        String sys = parts[2];
-        String abi = (parts.length > 3) ? parts[3] : null;
-
-        String osName;
-        switch (sys) {
-            case "linux":
-                osName = (abi != null && abi.equals("android")) ? "android" : "linux";
-                break;
-            case "darwin":
-            case "ios":
-                osName = "darwin";
-                break;
-            case "windows":
-                osName = "win32";
-                break;
-            case "freebsd":
-                osName = "freebsd";
-                break;
-            case "openbsd":
-                osName = "openbsd";
-                break;
-            case "netbsd":
-                osName = "netbsd";
-                break;
-            case "solaris":
-                osName = "sunos";
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported OS in Rust triple: " + sys);
-        }
-
-        return osName + "-" + arch;
-    }
-
     private Path resolveCopyToDir() throws MojoExecutionException {
 
         Path copyToDir = params.copyToDir;
@@ -506,12 +465,7 @@ public class Crate {
         }
 
         if (params.copyWithPlatformDir) {
-            if (params.target != null) {
-                copyToDir = copyToDir.resolve(
-                        getNativeLibraryResourcePrefixFromRustTriple(params.target));
-            } else {
-                copyToDir = copyToDir.resolve(Platform.RESOURCE_PREFIX);
-            }
+            copyToDir = copyToDir.resolve(Platform.RESOURCE_PREFIX);
         }
 
         if (!Files.exists(copyToDir, LinkOption.NOFOLLOW_LINKS)) {
