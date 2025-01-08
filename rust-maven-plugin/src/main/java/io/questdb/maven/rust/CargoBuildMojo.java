@@ -56,6 +56,18 @@ public class CargoBuildMojo extends CargoMojoBase {
     @Parameter(property = "copyWithPlatformDir")
     private boolean copyWithPlatformDir;
 
+    /**
+     * Use cross-rs to build a cross-compiled binary.
+     */
+    @Parameter(property = "cross", defaultValue = "false")
+    private boolean cross;
+
+    /**
+     * Use xwin to build a cross-compiled binary.
+     */
+    @Parameter(property = "xWin", defaultValue = "false")
+    private boolean xWin;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skip) {
@@ -67,7 +79,7 @@ public class CargoBuildMojo extends CargoMojoBase {
                 getTargetRootDir(),
                 extractCrateParams());
         crate.setLog(getLog());
-        crate.build();
+        crate.build(getToolchain());
         crate.copyArtifacts();
     }
 
@@ -83,5 +95,15 @@ public class CargoBuildMojo extends CargoMojoBase {
         }
         params.copyWithPlatformDir = copyWithPlatformDir;
         return params;
+    }
+
+    private String getToolchain() {
+        if (cross) {
+            return "cross";
+        }
+        if (xWin) {
+            return "xwin";
+        }
+        return null;
     }
 }

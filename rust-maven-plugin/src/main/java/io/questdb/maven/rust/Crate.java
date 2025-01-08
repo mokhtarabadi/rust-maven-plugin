@@ -432,15 +432,21 @@ public class Crate {
         }
     }
 
-    public void build() throws MojoExecutionException, MojoFailureException {
+    public void build(String toolchain) throws MojoExecutionException, MojoFailureException {
         List<String> args = new ArrayList<>();
+        if (toolchain != null) {
+            args.add(toolchain);
+        }
         args.add("build");
         addCargoArgs(args);
         cargo(args);
     }
 
-    public void test() throws MojoExecutionException, MojoFailureException {
+    public void test(String toolchain) throws MojoExecutionException, MojoFailureException {
         List<String> args = new ArrayList<>();
+        if (toolchain != null) {
+            args.add(toolchain);
+        }
         args.add("test");
         addCargoArgs(args);
         cargo(args);

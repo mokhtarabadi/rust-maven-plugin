@@ -38,6 +38,18 @@ public class CargoTestMojo extends CargoMojoBase {
     @Parameter(property = "skipTests", defaultValue = "false")
     private boolean skipTests;
 
+    /**
+     * Use cross-rs to build a cross-compiled binary.
+     */
+    @Parameter(property = "cross", defaultValue = "false")
+    private boolean cross;
+
+    /**
+     * Use xwin to build a cross-compiled binary.
+     */
+    @Parameter(property = "xWin", defaultValue = "false")
+    private boolean xWin;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skip || skipTests) {
@@ -49,6 +61,16 @@ public class CargoTestMojo extends CargoMojoBase {
                 getTargetRootDir(),
                 getCommonCrateParams());
         crate.setLog(getLog());
-        crate.test();
+        crate.test(getToolchain());
+    }
+
+    private String getToolchain() {
+        if (cross) {
+            return "cross";
+        }
+        if (xWin) {
+            return "xwin";
+        }
+        return null;
     }
 }

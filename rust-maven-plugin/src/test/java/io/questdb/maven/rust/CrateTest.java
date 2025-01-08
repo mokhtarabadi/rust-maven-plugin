@@ -557,7 +557,7 @@ public class CrateTest {
                 targetRootDir,
                 params);
         crate.setLog(TestLog.INSTANCE);
-        crate.build();
+        crate.build(null);
     }
 
     @Test
@@ -585,7 +585,7 @@ public class CrateTest {
                 targetRootDir,
                 params);
         crate.setLog(TestLog.INSTANCE);
-        crate.build();
+        crate.build(null);
     }
 
     @Test
