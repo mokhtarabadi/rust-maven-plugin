@@ -189,8 +189,8 @@
 
     <distributionManagement>
         <repository>
-            <id>nexus</id>
-            <url>http://localhost:8081/repository/maven-releases</url>
+            <id>surfShield</id>
+            <url>https://repo.surfshield.org/repository/maven-releases</url>
         </repository>
     </distributionManagement>
 </project>
