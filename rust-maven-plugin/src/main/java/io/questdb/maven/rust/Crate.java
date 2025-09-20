@@ -442,6 +442,10 @@ public class Crate {
             args.add(toolchain);
         }
         args.add("build");
+        if ("xwin".equals(toolchain) && (params.crossCompiler != null)) {
+            args.add("--cross-compiler");
+            args.add(params.crossCompiler);
+        }
         addCargoArgs(args);
         cargo(args);
     }
@@ -452,6 +456,10 @@ public class Crate {
             args.add(toolchain);
         }
         args.add("test");
+        if ("xwin".equals(toolchain) && (params.crossCompiler != null)) {
+            args.add("--cross-compiler");
+            args.add(params.crossCompiler);
+        }
         addCargoArgs(args);
         cargo(args);
     }
@@ -528,6 +536,7 @@ public class Crate {
         public boolean noDefaultFeatures;
         public boolean tests;
         public String[] extraArgs;
+        public String crossCompiler;
         public Path copyToDir;
         public boolean copyWithPlatformDir;
 

@@ -41,7 +41,6 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-
 public class CrateTest {
 
     @Rule
@@ -680,5 +679,91 @@ public class CrateTest {
             Files.createFile(libPath);
             return libPath;
         }
+    }
+
+    @Test
+    public void testXwinCrossCompilerArgPassed() throws Exception {
+        final String crateName = "xwin-cross-compiler";
+        final MockCrate mock = new MockCrate(crateName, "release");
+        mock.writeCargoToml(
+                "[package]\n" +
+                        "name = \"" + crateName + "\"\n" +
+                        "version = \"0.1.0\"\n" +
+                        "edition = \"2021\"\n");
+        mock.touchSrc("main.rs");
+        mock.touchBin(crateName);
+
+        final Crate.Params params = defaultParams();
+
+        // Create a wrapper script to capture args
+        final Path script = tmpDir.newFile("cargo_wrapper.sh").toPath();
+        final Path outFile = tmpDir.newFile("cargo_args.txt").toPath();
+        writeFile(script,
+                "#!/bin/sh\n" +
+                        "printf '%s\\n' \"$@\" > \"" + outFile.toAbsolutePath().toString() + "\"\n" +
+                        "exit 0\n");
+        script.toFile().setExecutable(true);
+
+        params.cargoPath = script.toAbsolutePath().toString();
+        params.crossCompiler = "clang";
+        params.release = true;
+
+        final Crate crate = new Crate(
+                mock.crateRoot,
+                targetRootDir,
+                params);
+        crate.setLog(TestLog.INSTANCE);
+        crate.build("xwin");
+
+        final java.util.List<String> lines = java.nio.file.Files.readAllLines(outFile);
+        final int idxToolchain = lines.indexOf("xwin");
+        final int idxBuild = lines.indexOf("build");
+        final int idxFlag = lines.indexOf("--cross-compiler");
+        final int idxCompiler = lines.indexOf("clang");
+
+        assertTrue(idxToolchain >= 0);
+        assertTrue(idxBuild >= 0);
+        assertTrue(idxFlag >= 0);
+        assertTrue(idxCompiler >= 0);
+        assertTrue(idxToolchain < idxBuild);
+        assertTrue(idxBuild < idxFlag);
+        assertTrue(idxFlag < idxCompiler);
+    }
+
+    @Test
+    public void testNoCrossCompilerForNonXwin() throws Exception {
+        final String crateName = "no-xwin";
+        final MockCrate mock = new MockCrate(crateName, "release");
+        mock.writeCargoToml(
+                "[package]\n" +
+                        "name = \"" + crateName + "\"\n" +
+                        "version = \"0.1.0\"\n" +
+                        "edition = \"2021\"\n");
+        mock.touchSrc("main.rs");
+        mock.touchBin(crateName);
+
+        final Crate.Params params = defaultParams();
+
+        final Path script = tmpDir.newFile("cargo_wrapper2.sh").toPath();
+        final Path outFile = tmpDir.newFile("cargo_args2.txt").toPath();
+        writeFile(script,
+                "#!/bin/sh\n" +
+                        "printf '%s\\n' \"$@\" > \"" + outFile.toAbsolutePath().toString() + "\"\n" +
+                        "exit 0\n");
+        script.toFile().setExecutable(true);
+
+        params.cargoPath = script.toAbsolutePath().toString();
+        params.crossCompiler = "clang";
+        params.release = true;
+
+        final Crate crate = new Crate(
+                mock.crateRoot,
+                targetRootDir,
+                params);
+        crate.setLog(TestLog.INSTANCE);
+        crate.build("cross");
+
+        final java.util.List<String> lines = java.nio.file.Files.readAllLines(outFile);
+        assertFalse(lines.contains("--cross-compiler"));
     }
 }

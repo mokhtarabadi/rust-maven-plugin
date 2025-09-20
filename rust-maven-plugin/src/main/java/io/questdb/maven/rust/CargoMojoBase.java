@@ -113,6 +113,12 @@ public abstract class CargoMojoBase extends AbstractMojo {
     @Parameter(property = "extra-args")
     private String[] extraArgs;
 
+    /**
+     * The cross-compiler to use with the `xwin` toolchain. Possible values: "clang-cl", "clang".
+     */
+    @Parameter(property = "xWinCrossCompiler", defaultValue = "clang-cl")
+    private String xWinCrossCompiler;
+
     protected String getVerbosity() throws MojoExecutionException {
         if (verbosity == null) {
             return null;
@@ -154,6 +160,15 @@ public abstract class CargoMojoBase extends AbstractMojo {
         params.allFeatures = allFeatures;
         params.noDefaultFeatures = noDefaultFeatures;
         params.extraArgs = extraArgs;
+        // Validate and propagate xWinCrossCompiler
+        String crossCompiler = xWinCrossCompiler;
+        if (crossCompiler == null || crossCompiler.isEmpty()) {
+            crossCompiler = "clang-cl";
+        }
+        if (!"clang-cl".equals(crossCompiler) && !"clang".equals(crossCompiler)) {
+            throw new MojoExecutionException("Invalid xWinCrossCompiler: " + crossCompiler);
+        }
+        params.crossCompiler = crossCompiler;
         return params;
     }
 }
