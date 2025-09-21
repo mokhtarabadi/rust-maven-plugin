@@ -766,4 +766,89 @@ public class CrateTest {
         final java.util.List<String> lines = java.nio.file.Files.readAllLines(outFile);
         assertFalse(lines.contains("--cross-compiler"));
     }
+
+    @Test
+    public void testXwinArchArgPassed() throws Exception {
+        final String crateName = "xwin-arch";
+        final MockCrate mock = new MockCrate(crateName, "release");
+        mock.writeCargoToml(
+                "[package]\n" +
+                        "name = \"" + crateName + "\"\n" +
+                        "version = \"0.1.0\"\n" +
+                        "edition = \"2021\"\n");
+        mock.touchSrc("main.rs");
+        mock.touchBin(crateName);
+
+        final Crate.Params params = defaultParams();
+
+        final Path script = tmpDir.newFile("cargo_wrapper3.sh").toPath();
+        final Path outFile = tmpDir.newFile("cargo_args3.txt").toPath();
+        writeFile(script,
+                "#!/bin/sh\n" +
+                        "printf '%s\\n' \"$@\" > \"" + outFile.toAbsolutePath().toString() + "\"\n" +
+                        "exit 0\n");
+        script.toFile().setExecutable(true);
+
+        params.cargoPath = script.toAbsolutePath().toString();
+        params.xWinArch = "x86,x86_64";
+        params.release = true;
+
+        final Crate crate = new Crate(
+                mock.crateRoot,
+                targetRootDir,
+                params);
+        crate.setLog(TestLog.INSTANCE);
+        crate.build("xwin");
+
+        final java.util.List<String> lines = java.nio.file.Files.readAllLines(outFile);
+        final int idxToolchain = lines.indexOf("xwin");
+        final int idxBuild = lines.indexOf("build");
+        final int idxFlag = lines.indexOf("--xwin-arch");
+        final int idxArch = lines.indexOf("x86,x86_64");
+
+        assertTrue(idxToolchain >= 0);
+        assertTrue(idxBuild >= 0);
+        assertTrue(idxFlag >= 0);
+        assertTrue(idxArch >= 0);
+        assertTrue(idxToolchain < idxBuild);
+        assertTrue(idxBuild < idxFlag);
+        assertTrue(idxFlag < idxArch);
+    }
+
+    @Test
+    public void testNoXwinArchForNonXwin() throws Exception {
+        final String crateName = "no-xwin-arch";
+        final MockCrate mock = new MockCrate(crateName, "release");
+        mock.writeCargoToml(
+                "[package]\n" +
+                        "name = \"" + crateName + "\"\n" +
+                        "version = \"0.1.0\"\n" +
+                        "edition = \"2021\"\n");
+        mock.touchSrc("main.rs");
+        mock.touchBin(crateName);
+
+        final Crate.Params params = defaultParams();
+
+        final Path script = tmpDir.newFile("cargo_wrapper4.sh").toPath();
+        final Path outFile = tmpDir.newFile("cargo_args4.txt").toPath();
+        writeFile(script,
+                "#!/bin/sh\n" +
+                        "printf '%s\\n' \"$@\" > \"" + outFile.toAbsolutePath().toString() + "\"\n" +
+                        "exit 0\n");
+        script.toFile().setExecutable(true);
+
+        params.cargoPath = script.toAbsolutePath().toString();
+        params.xWinArch = "x86,x86_64";
+        params.release = true;
+
+        final Crate crate = new Crate(
+                mock.crateRoot,
+                targetRootDir,
+                params);
+        crate.setLog(TestLog.INSTANCE);
+        crate.build("cross");
+
+        final java.util.List<String> lines = java.nio.file.Files.readAllLines(outFile);
+        assertFalse(lines.contains("--xwin-arch"));
+    }
 }

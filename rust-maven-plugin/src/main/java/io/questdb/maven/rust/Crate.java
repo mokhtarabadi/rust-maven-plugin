@@ -446,6 +446,10 @@ public class Crate {
             args.add("--cross-compiler");
             args.add(params.crossCompiler);
         }
+        if ("xwin".equals(toolchain) && (params.xWinArch != null)) {
+            args.add("--xwin-arch");
+            args.add(params.xWinArch);
+        }
         addCargoArgs(args);
         cargo(args);
     }
@@ -459,6 +463,10 @@ public class Crate {
         if ("xwin".equals(toolchain) && (params.crossCompiler != null)) {
             args.add("--cross-compiler");
             args.add(params.crossCompiler);
+        }
+        if ("xwin".equals(toolchain) && (params.xWinArch != null)) {
+            args.add("--xwin-arch");
+            args.add(params.xWinArch);
         }
         addCargoArgs(args);
         cargo(args);
@@ -537,6 +545,7 @@ public class Crate {
         public boolean tests;
         public String[] extraArgs;
         public String crossCompiler;
+        public String xWinArch;
         public Path copyToDir;
         public boolean copyWithPlatformDir;
 

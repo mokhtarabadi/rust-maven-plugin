@@ -119,6 +119,13 @@ public abstract class CargoMojoBase extends AbstractMojo {
     @Parameter(property = "xWinCrossCompiler", defaultValue = "clang-cl")
     private String xWinCrossCompiler;
 
+    /**
+     * The architectures to include when using the `xwin` toolchain.
+     * Comma-separated list. Possible values: x86, x86_64, aarch, aarch64
+     */
+    @Parameter(property = "xWinArch", defaultValue = "x86_64,aarch64")
+    private String xWinArch;
+
     protected String getVerbosity() throws MojoExecutionException {
         if (verbosity == null) {
             return null;
@@ -169,6 +176,30 @@ public abstract class CargoMojoBase extends AbstractMojo {
             throw new MojoExecutionException("Invalid xWinCrossCompiler: " + crossCompiler);
         }
         params.crossCompiler = crossCompiler;
+        // Validate and normalize xWinArch
+        String archs = xWinArch;
+        if (archs == null || archs.trim().isEmpty()) {
+            archs = "x86_64,aarch64";
+        }
+        // Normalize tokens and validate
+        String[] tokens = archs.split(",");
+        java.util.List<String> cleaned = new java.util.ArrayList<>();
+        for (String token : tokens) {
+            if (token == null) continue;
+            token = token.trim();
+            if (token.isEmpty()) continue;
+            switch (token) {
+                case "x86":
+                case "x86_64":
+                case "aarch":
+                case "aarch64":
+                    cleaned.add(token);
+                    break;
+                default:
+                    throw new MojoExecutionException("Invalid xWinArch token: " + token);
+            }
+        }
+        params.xWinArch = String.join(",", cleaned);
         return params;
     }
 }
