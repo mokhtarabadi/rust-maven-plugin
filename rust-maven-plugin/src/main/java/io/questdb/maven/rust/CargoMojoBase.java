@@ -63,6 +63,17 @@ public abstract class CargoMojoBase extends AbstractMojo {
     private String path;
 
     /**
+     * Optional root directory to use for Cargo target outputs. If set, this
+     * path will be used instead of the default
+     * `${project.build.directory}/rust-maven-plugin`.
+     *
+     * This allows users (for example on Windows) to point the Cargo target
+     * directory at a short path to avoid long-path issues.
+     */
+    @Parameter(property = "targetRootDir")
+    private String targetRootDir;
+
+    /**
      * Build artifacts in release mode, with optimizations.
      * Defaults to "false" and creates a debug build.
      * Equivalent to Cargo's `--release` option.
@@ -151,6 +162,14 @@ public abstract class CargoMojoBase extends AbstractMojo {
     }
 
     protected Path getTargetRootDir() {
+        if (targetRootDir != null && !targetRootDir.trim().isEmpty()) {
+            Path configured = Paths.get(targetRootDir);
+            if (!configured.isAbsolute()) {
+                configured = project.getBasedir().toPath().resolve(configured);
+            }
+            return configured;
+        }
+
         return Paths.get(
                 project.getBuild().getDirectory(),
                 "rust-maven-plugin");
